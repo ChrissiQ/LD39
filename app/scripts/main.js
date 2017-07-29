@@ -16,6 +16,7 @@ let textFPS;
 let circleScale = 3;
 let unit = 1;
 let unitText;
+let filter;
 
 function resizeStage() {
   let width = window.innerWidth;
@@ -49,11 +50,15 @@ function tick(event) {
       population += amount;
       populationTimer = 0;
       demand = (Math.pow(population / 100, 3) * 1000);
+
+      filter = new createjs.ColorFilter(0, 1, 0, 1);
+      circle.filters = [filter];
+      circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
     }
     // createjs.Ticker.setPaused(true);
   }
   if (unit === 1) {
-    unitText = 'Wh';
+    unitText = 'W';
   }
   textPopulation.text = `Population: ${parseInt(population, 10)}`;
   textDemand.text = `Demand: ${demand.toFixed(1)} ${unitText}`;
@@ -85,10 +90,12 @@ function init() {
         scaleX: (power / 1000) * circleScale,
         scaleY: (power / 1000) * circleScale,
       }, 200);
+    circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
   });
-  let filter = new createjs.ColorFilter(1, 0, 0, 1);
+  filter = new createjs.ColorFilter(0, 1, 0, 1);
   circle.filters = [filter];
   stage.addChild(circle);
+  circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
 
   textPopulation = stage.addChild(new createjs.Text(`Population: ${population}`, '20px Arial', '#ffffff'));
   textPopulation.textBaseline = 'alphabetic';
