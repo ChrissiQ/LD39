@@ -1,0 +1,11 @@
+{
+  "generator-lb": {
+    "version": "4.0.1",
+    "name": "ld39",
+    "features": [
+      "includeModernizr"
+    ],
+    "multiLanguage": true,
+    "dataFormat": "json"
+  }
+}
