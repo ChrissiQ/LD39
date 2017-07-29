@@ -63,7 +63,7 @@ function tick(event) {
   textPopulation.text = `Population: ${parseInt(population, 10)}`;
   textDemand.text = `Demand: ${demand.toFixed(1)} ${unitText}`;
   textPower.text = `Power: ${power} ${unitText}`;
-  textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS()}`;
+  textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`;
 }
 
 function init() {
