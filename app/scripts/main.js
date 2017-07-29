@@ -1,32 +1,46 @@
+const POPULATION_SPEED = 10;
+const POWER_STARTING_VALUE = 1025;
 let stage;
 let circle;
 let scale;
-let population = 100;
-let populationTimer = 0;
-const POPULATION_SPEED = 10;
-let demand = 1;
-let demandTimer = 0;
-const DEMAND_SPEED = 60;
-let power = 1100;
-let powerScale = 1;
+let population;
+let populationTimer;
+let demand;
+let power = POWER_STARTING_VALUE;
 let textPopulation;
 let textDemand;
 let textPower;
 let textFPS;
+let textLose;
 let circleScale = 3;
-let unit = 1;
+let unit;
 let unitText;
 let filter;
+
+function start() {
+  createjs.Ticker.setPaused(false);
+  if (textLose) {
+    delete textLose.text;
+  }
+  if (stage) {
+    stage.removeEventListener('mousedown', start);
+  }
+  population = 100;
+  populationTimer = 0;
+  demand = 1;
+  power = POWER_STARTING_VALUE;
+  circleScale = 3;
+  unit = 1;
+  unitText = 'W';
+}
 
 function resizeStage() {
   let width = window.innerWidth;
   let height = window.innerHeight;
-  let tryWidth = height * (9 / 16);
-  let tryHeight = width * (16 / 9);
-  if (tryWidth < width) {
-    width = tryWidth;
+  if (height * (9 / 16) < width) {
+    width = height * (9 / 16);
   } else {
-    height = tryHeight;
+    height = width * (16 / 9);
   }
   scale = width / 100;
   stage.canvas.setAttribute('width', width);
@@ -37,25 +51,64 @@ function resizeStage() {
       y: stage.canvas.height / 2,
     });
   }
+  if (textLose) {
+    delete textLose.text;
+    textLose = stage.addChild(new createjs.Text('YOU LOSE', `${scale * 15}px Arial`, '#ffffff'));
+    textLose.textBaseline = 'middle';
+    textLose.textAlign = 'center';
+    textLose.x = stage.canvas.width / 2;
+    textLose.y = stage.canvas.height / 2;
+  }
+  if (textFPS) {
+    delete textFPS.text;
+    textFPS = stage.addChild(new createjs.Text(`FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`, '20px Arial', '#ffffff'));
+    textFPS.textBaseline = 'alphabetic';
+    textFPS.x = 10;
+    textFPS.y = stage.canvas.height - (textFPS.getMeasuredLineHeight() + 5);
+  }
 }
 
-function tick(event) {
+function tick() {
   if (!createjs.Ticker.getPaused()) {
     populationTimer += 1;
     if (populationTimer > POPULATION_SPEED) {
-      let amount = Math.pow(population, 1.02) / 1000;
-      if (amount < Number.MAX_SAFE_INTEGER) {
-        console.log(amount);
-      }
-      population += amount;
+      population += Math.pow(population, 1.02) / 1000;
       populationTimer = 0;
       demand = (Math.pow(population / 100, 3) * 1000);
 
-      filter = new createjs.ColorFilter(0, 1, 0, 1);
+      if ((demand) / power < 0.5) {
+        filter = new createjs.ColorFilter(
+          ((demand) / power) * 2,
+          1,
+          0,
+          1
+        );
+      } else {
+        filter = new createjs.ColorFilter(
+          1,
+          2 - (((demand) / power) * 2),
+          0,
+          1
+        );
+      }
       circle.filters = [filter];
       circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+
+      if (demand > power) {
+        createjs.Ticker.setPaused(true);
+
+        if (textLose) {
+          delete textLose.text;
+        }
+        textLose = stage.addChild(new createjs.Text('YOU LOSE', `${scale * 15}px Arial`, '#ffffff'));
+        textLose.textBaseline = 'middle';
+        textLose.textAlign = 'center';
+        textLose.x = stage.canvas.width / 2;
+        textLose.y = stage.canvas.height / 2;
+        createjs.Touch.enable(stage);
+        stage.addEventListener('mousedown', start);
+      }
     }
-    // createjs.Ticker.setPaused(true);
   }
   if (unit === 1) {
     unitText = 'W';
@@ -80,7 +133,7 @@ function init() {
     scaleX: (power / 1000) * circleScale,
     scaleY: (power / 1000) * circleScale,
   });
-  circle.addEventListener('mousedown', (event) => {
+  circle.addEventListener('mousedown', () => {
     if (!createjs.Ticker.getPaused()) {
       power += 100;
     }
@@ -123,15 +176,19 @@ function init() {
   textFPS.textBaseline = 'alphabetic';
   textFPS.x = 10;
   textFPS.y = stage.canvas.height - (textFPS.getMeasuredLineHeight() + 5);
+
+  start();
+  createjs.Ticker.setPaused(true);
 }
 
 init();
 
 window.addEventListener('resize', () => resizeStage());
 
-let button = document.getElementById('play');
-button.style.display = 'none';
+const button = document.getElementById('play');
 button.addEventListener('click', () => {
+  createjs.Ticker.setPaused(false);
+  button.style.display = 'none';
   if (stage.canvas.webkitRequestFullscreen) {
     stage.canvas.webkitRequestFullscreen();
   } else if (stage.canvas.mozRequestFullScreen) {
