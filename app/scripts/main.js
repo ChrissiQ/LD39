@@ -1,5 +1,5 @@
 const POPULATION_SPEED = 10;
-const POWER_STARTING_VALUE = 1025;
+const POWER_STARTING_VALUE = 10000;
 let stage;
 let circle;
 let scale;
@@ -16,8 +16,40 @@ let circleScale = 3;
 let unit;
 let unitText;
 let filter;
+let checkLose;
+let start;
+let addTextFPS;
+let setTextFPS;
 
-function start() {
+setTextFPS = function () {
+  textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`;
+};
+
+addTextFPS = function () {
+  textFPS = stage.addChild(new createjs.Text(`FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`, '20px Arial', '#ffffff'));
+  textFPS.textBaseline = 'alphabetic';
+  textFPS.x = 10;
+  textFPS.y = stage.canvas.height - (textFPS.getMeasuredLineHeight() + 5);
+};
+
+checkLose = function () {
+
+  if (textLose) {
+    delete textLose.text;
+  }
+  if (demand > power) {
+    createjs.Ticker.setPaused(true);
+    textLose = stage.addChild(new createjs.Text('YOU LOSE', `${scale * 15}px Arial`, '#ffffff'));
+    textLose.textBaseline = 'middle';
+    textLose.textAlign = 'center';
+    textLose.x = stage.canvas.width / 2;
+    textLose.y = stage.canvas.height / 2;
+    createjs.Touch.enable(stage);
+    stage.addEventListener('mousedown', start);
+  }
+};
+
+start = function () {
   createjs.Ticker.setPaused(false);
   if (textLose) {
     delete textLose.text;
@@ -32,7 +64,7 @@ function start() {
   circleScale = 3;
   unit = 1;
   unitText = 'W';
-}
+};
 
 function resizeStage() {
   let width = window.innerWidth;
@@ -51,20 +83,10 @@ function resizeStage() {
       y: stage.canvas.height / 2,
     });
   }
-  if (textLose) {
-    delete textLose.text;
-    textLose = stage.addChild(new createjs.Text('YOU LOSE', `${scale * 15}px Arial`, '#ffffff'));
-    textLose.textBaseline = 'middle';
-    textLose.textAlign = 'center';
-    textLose.x = stage.canvas.width / 2;
-    textLose.y = stage.canvas.height / 2;
-  }
+  checkLose();
   if (textFPS) {
     delete textFPS.text;
-    textFPS = stage.addChild(new createjs.Text(`FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`, '20px Arial', '#ffffff'));
-    textFPS.textBaseline = 'alphabetic';
-    textFPS.x = 10;
-    textFPS.y = stage.canvas.height - (textFPS.getMeasuredLineHeight() + 5);
+    addTextFPS();
   }
 }
 
@@ -92,22 +114,10 @@ function tick() {
         );
       }
       circle.filters = [filter];
+      circle.uncache();
       circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
 
-      if (demand > power) {
-        createjs.Ticker.setPaused(true);
-
-        if (textLose) {
-          delete textLose.text;
-        }
-        textLose = stage.addChild(new createjs.Text('YOU LOSE', `${scale * 15}px Arial`, '#ffffff'));
-        textLose.textBaseline = 'middle';
-        textLose.textAlign = 'center';
-        textLose.x = stage.canvas.width / 2;
-        textLose.y = stage.canvas.height / 2;
-        createjs.Touch.enable(stage);
-        stage.addEventListener('mousedown', start);
-      }
+      checkLose();
     }
   }
   if (unit === 1) {
@@ -116,7 +126,7 @@ function tick() {
   textPopulation.text = `Population: ${parseInt(population, 10)}`;
   textDemand.text = `Demand: ${demand.toFixed(1)} ${unitText}`;
   textPower.text = `Power: ${power} ${unitText}`;
-  textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`;
+  setTextFPS();
 }
 
 function init() {
@@ -143,11 +153,13 @@ function init() {
         scaleX: (power / 1000) * circleScale,
         scaleY: (power / 1000) * circleScale,
       }, 200);
+    circle.uncache();
     circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
   });
   filter = new createjs.ColorFilter(0, 1, 0, 1);
   circle.filters = [filter];
   stage.addChild(circle);
+  circle.uncache();
   circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
 
   textPopulation = stage.addChild(new createjs.Text(`Population: ${population}`, '20px Arial', '#ffffff'));
@@ -172,13 +184,10 @@ function init() {
   createjs.Ticker.addEventListener('tick', stage);
   createjs.Ticker.addEventListener('tick', tick);
 
-  textFPS = stage.addChild(new createjs.Text('', '20px Arial', '#ffffff'));
-  textFPS.textBaseline = 'alphabetic';
-  textFPS.x = 10;
-  textFPS.y = stage.canvas.height - (textFPS.getMeasuredLineHeight() + 5);
+  addTextFPS();
 
   start();
-  createjs.Ticker.setPaused(true);
+  // createjs.Ticker.setPaused(true);
 }
 
 init();
@@ -186,6 +195,7 @@ init();
 window.addEventListener('resize', () => resizeStage());
 
 const button = document.getElementById('play');
+button.style.display = 'none';
 button.addEventListener('click', () => {
   createjs.Ticker.setPaused(false);
   button.style.display = 'none';
