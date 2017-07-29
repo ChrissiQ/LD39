@@ -1,19 +1,21 @@
 let stage;
 let circle;
 let scale;
-let population = 1;
+let population = 100;
 let populationTimer = 0;
 const POPULATION_SPEED = 10;
 let demand = 1;
 let demandTimer = 0;
 const DEMAND_SPEED = 60;
-let power = 10;
+let power = 1100;
 let powerScale = 1;
 let textPopulation;
 let textDemand;
 let textPower;
 let textFPS;
 let circleScale = 3;
+let unit = 1;
+let unitText;
 
 function resizeStage() {
   let width = window.innerWidth;
@@ -37,19 +39,25 @@ function resizeStage() {
 }
 
 function tick(event) {
-  demandTimer += 1;
-  if (demandTimer > DEMAND_SPEED) {
-    demand += 1;
-    demandTimer = 0;
+  if (!createjs.Ticker.getPaused()) {
+    populationTimer += 1;
+    if (populationTimer > POPULATION_SPEED) {
+      let amount = Math.pow(population, 1.02) / 1000;
+      if (amount < Number.MAX_SAFE_INTEGER) {
+        console.log(amount);
+      }
+      population += amount;
+      populationTimer = 0;
+      demand = (Math.pow(population / 100, 3) * 1000);
+    }
+    // createjs.Ticker.setPaused(true);
   }
-  populationTimer += 1;
-  if (populationTimer > POPULATION_SPEED) {
-    population += 1;
-    populationTimer = 0;
+  if (unit === 1) {
+    unitText = 'Wh';
   }
-  textPopulation.text = `Population: ${population}`;
-  textDemand.text = `Demand: ${demand} W`;
-  textPower.text = `Power: ${power} W`;
+  textPopulation.text = `Population: ${parseInt(population, 10)}`;
+  textDemand.text = `Demand: ${demand.toFixed(1)} ${unitText}`;
+  textPower.text = `Power: ${power} ${unitText}`;
   textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS()}`;
 }
 
@@ -64,16 +72,18 @@ function init() {
   circle.set({
     x: stage.canvas.width / 2,
     y: stage.canvas.height / 2,
-    scaleX: (power / 10) * circleScale,
-    scaleY: (power / 10) * circleScale,
+    scaleX: (power / 1000) * circleScale,
+    scaleY: (power / 1000) * circleScale,
   });
   circle.addEventListener('mousedown', (event) => {
-    power += 10;
+    if (!createjs.Ticker.getPaused()) {
+      power += 100;
+    }
     createjs.Tween.removeAllTweens(circle);
     createjs.Tween.get(circle, { loop: false })
       .to({
-        scaleX: (power / 10) * circleScale,
-        scaleY: (power / 10) * circleScale,
+        scaleX: (power / 1000) * circleScale,
+        scaleY: (power / 1000) * circleScale,
       }, 200);
   });
   let filter = new createjs.ColorFilter(1, 0, 0, 1);
