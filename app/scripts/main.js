@@ -5,7 +5,6 @@ const DANGER = 1000;
 const DEFAULT_BGM_VOL = 0.5;
 const DEFAULT_SFX_VOL = 0.1;
 let stage;
-let circle;
 let scale;
 let population;
 let populationTimer;
@@ -34,6 +33,7 @@ let bgmVolume;
 let sfxVolume;
 let createCircle1;
 let createCircle2;
+let circles = [];
 
 setTextFPS = function () {
   textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`;
@@ -77,19 +77,19 @@ start = function () {
   circleScale = 3;
   unit = 1;
   unitText = 'W';
-  circleSet();
+  circles.forEach(circle => circleSet(circle));
 };
 
-circleClick = function () {
+circleClick = function (event) {
   if (!createjs.Ticker.getPaused()) {
     power += 100;
     sfx = createjs.Sound.play('sfx01');
     sfx.volume = sfxVolume;
   }
-  circleTween();
+  circleTween(event.target);
 };
 
-circleTween = function () {
+circleTween = function (circle) {
   createjs.Tween.removeAllTweens(circle);
   createjs.Tween.get(circle, { loop: false })
     .to({
@@ -100,7 +100,7 @@ circleTween = function () {
   circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
 };
 
-circleSet = function () {
+circleSet = function (circle) {
   circle.set({
     x: stage.canvas.width / 2,
     y: stage.canvas.height / 2,
@@ -110,9 +110,9 @@ circleSet = function () {
 };
 
 createCircle1 = function () {
-  circle = new createjs.Shape();
+  let circle = new createjs.Shape();
   circle.graphics.beginFill('#ffffff').drawCircle(0, 0, scale);
-  circleSet();
+  circleSet(circle);
   circle.addEventListener('mousedown', circleClick);
   filter = new createjs.ColorFilter(0, 1, 0, 1);
   circle.filters = [filter];
@@ -140,10 +140,7 @@ createCircle1 = function () {
   textPower.x = circle.x;
   textPower.y = circle.y + (textPower.getMeasuredLineHeight() + 5);
   textPower.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
-};
-
-createCircle2 = function () {
-
+  return circle;
 };
 
 function resizeStage() {
@@ -157,12 +154,14 @@ function resizeStage() {
   scale = width / 100;
   stage.canvas.setAttribute('width', width);
   stage.canvas.setAttribute('height', height);
-  if (circle) {
-    circle.set({
-      x: stage.canvas.width / 2,
-      y: stage.canvas.height / 2,
-    });
-  }
+  circles.forEach(circle => {
+    if (circle) {
+      circle.set({
+        x: stage.canvas.width / 2,
+        y: stage.canvas.height / 2,
+      });
+    }
+  });
   checkLose();
   if (textFPS) {
     delete textFPS.text;
@@ -172,22 +171,24 @@ function resizeStage() {
 
 function tick() {
   if (!createjs.Ticker.getPaused()) {
-    populationTimer += 1;
-    if (populationTimer > POPULATION_SPEED) {
-      population += Math.pow(population, 1.02) / 1000;
-      populationTimer = 0;
-      demand = (Math.pow(population / 100, 3) * 1000);
-      let r = (1 - ((power - demand) / DANGER)) * 2;
-      let g = ((power - demand) / DANGER) * 2;
-      let b = 0;
-      let a = 1;
-      filter = new createjs.ColorFilter(r, g, b, a);
-      circle.filters = [filter];
-      circle.uncache();
-      circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+    circles.forEach(circle => {
+      populationTimer += 1;
+      if (populationTimer > POPULATION_SPEED) {
+        population += Math.pow(population, 1.02) / 1000;
+        populationTimer = 0;
+        demand = (Math.pow(population / 100, 3) * 1000);
+        let r = (1 - ((power - demand) / DANGER)) * 2;
+        let g = ((power - demand) / DANGER) * 2;
+        let b = 0;
+        let a = 1;
+        filter = new createjs.ColorFilter(r, g, b, a);
+        circle.filters = [filter];
+        circle.uncache();
+        circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
 
-      checkLose();
-    }
+        checkLose();
+      }
+    });
   }
   if (unit === 1) {
     unitText = 'W';
@@ -204,9 +205,8 @@ function init() {
   stage.canvas.style.backgroundColor = '#333';
   resizeStage();
 
-  // Circle 1
-  createCircle1();
-  createCircle2();
+  // Circle
+  circles.push(createCircle1());
 
   // Ticker
   createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
