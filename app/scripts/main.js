@@ -1,5 +1,7 @@
 const POPULATION_SPEED = 10;
-const POWER_STARTING_VALUE = 1200;
+const POWER_STARTING_VALUE = 9000;
+const POPULATION_STARTING_VALUE = 200;
+const DANGER = 1000;
 let stage;
 let circle;
 let scale;
@@ -64,7 +66,7 @@ start = function () {
   if (stage) {
     stage.off('stagemousedown', start);
   }
-  population = 100;
+  population = POPULATION_STARTING_VALUE;
   populationTimer = 0;
   demand = 1;
   power = POWER_STARTING_VALUE;
@@ -125,22 +127,11 @@ function tick() {
       population += Math.pow(population, 1.02) / 1000;
       populationTimer = 0;
       demand = (Math.pow(population / 100, 3) * 1000);
-
-      if ((demand) / power < 0.5) {
-        filter = new createjs.ColorFilter(
-          ((demand) / power) * 2,
-          1,
-          0,
-          1
-        );
-      } else {
-        filter = new createjs.ColorFilter(
-          1,
-          2 - (((demand) / power) * 2),
-          0,
-          1
-        );
-      }
+      let r = (1 - ((power - demand) / DANGER)) * 2;
+      let g = ((power - demand) / DANGER) * 2;
+      let b = 0;
+      let a = 1;
+      filter = new createjs.ColorFilter(r, g, b, a);
       circle.filters = [filter];
       circle.uncache();
       circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
