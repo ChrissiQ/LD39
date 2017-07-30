@@ -2,6 +2,8 @@ const POPULATION_SPEED = 10;
 const POWER_STARTING_VALUE = 9000;
 const POPULATION_STARTING_VALUE = 200;
 const DANGER = 1000;
+const DEFAULT_BGM_VOL = 0.5;
+const DEFAULT_SFX_VOL = 0.1;
 let stage;
 let circle;
 let scale;
@@ -53,8 +55,7 @@ checkLose = function () {
     textLose.textAlign = 'center';
     textLose.x = stage.canvas.width / 2;
     textLose.y = stage.canvas.height / 2;
-    stage.on('stagemousedown', start);
-    stage.on('stagemousedown', start);
+    stage.addEventListener('stagemousedown', start);
   }
 };
 
@@ -64,7 +65,7 @@ start = function () {
     delete textLose.text;
   }
   if (stage) {
-    stage.off('stagemousedown', start);
+    stage.removeEventListener('stagemousedown', start);
   }
   population = POPULATION_STARTING_VALUE;
   populationTimer = 0;
@@ -199,8 +200,8 @@ function init() {
   // createjs.Ticker.setPaused(true);
 
   // Sound
-  bgmVolume = 0.25;
-  sfxVolume = 0.05;
+  bgmVolume = DEFAULT_BGM_VOL;
+  sfxVolume = DEFAULT_SFX_VOL;
   createjs.Sound.registerSounds([{
     id: 'bgm',
     src: '/audio/bgm.mp3',
@@ -228,8 +229,8 @@ function init() {
       muteButton.color = '#666';
       mute = true;
     } else {
-      bgmVolume = 0.25;
-      sfxVolume = 0.05;
+      bgmVolume = DEFAULT_BGM_VOL;
+      sfxVolume = DEFAULT_SFX_VOL;
       muteButton.text = '\uf026';
       muteButton.color = '#ffffff';
       mute = false;
