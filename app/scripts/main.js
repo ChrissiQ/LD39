@@ -1,5 +1,5 @@
 const POPULATION_SPEED = 10;
-const POWER_STARTING_VALUE = 10000;
+const POWER_STARTING_VALUE = 1200;
 let stage;
 let circle;
 let scale;
@@ -20,6 +20,13 @@ let checkLose;
 let start;
 let addTextFPS;
 let setTextFPS;
+let circleTween;
+let circleSet;
+let bgm;
+let sfx;
+let mute;
+let bgmVolume;
+let sfxVolume;
 
 setTextFPS = function () {
   textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`;
@@ -44,8 +51,8 @@ checkLose = function () {
     textLose.textAlign = 'center';
     textLose.x = stage.canvas.width / 2;
     textLose.y = stage.canvas.height / 2;
-    createjs.Touch.enable(stage);
-    stage.addEventListener('mousedown', start);
+    stage.on('stagemousedown', start);
+    stage.on('stagemousedown', start);
   }
 };
 
@@ -55,7 +62,7 @@ start = function () {
     delete textLose.text;
   }
   if (stage) {
-    stage.removeEventListener('mousedown', start);
+    stage.off('stagemousedown', start);
   }
   population = 100;
   populationTimer = 0;
@@ -64,6 +71,27 @@ start = function () {
   circleScale = 3;
   unit = 1;
   unitText = 'W';
+  circleSet();
+};
+
+circleTween = function () {
+  createjs.Tween.removeAllTweens(circle);
+  createjs.Tween.get(circle, { loop: false })
+    .to({
+      scaleX: (power / 1000) * circleScale,
+      scaleY: (power / 1000) * circleScale,
+    }, 200);
+  circle.uncache();
+  circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+};
+
+circleSet = function () {
+  circle.set({
+    x: stage.canvas.width / 2,
+    y: stage.canvas.height / 2,
+    scaleX: (power / 1000) * circleScale,
+    scaleY: (power / 1000) * circleScale,
+  });
 };
 
 function resizeStage() {
@@ -137,24 +165,14 @@ function init() {
 
   circle = new createjs.Shape();
   circle.graphics.beginFill('#ffffff').drawCircle(0, 0, scale);
-  circle.set({
-    x: stage.canvas.width / 2,
-    y: stage.canvas.height / 2,
-    scaleX: (power / 1000) * circleScale,
-    scaleY: (power / 1000) * circleScale,
-  });
+  circleSet();
   circle.addEventListener('mousedown', () => {
     if (!createjs.Ticker.getPaused()) {
       power += 100;
+      sfx = createjs.Sound.play('sfx01');
+      sfx.volume = sfxVolume;
     }
-    createjs.Tween.removeAllTweens(circle);
-    createjs.Tween.get(circle, { loop: false })
-      .to({
-        scaleX: (power / 1000) * circleScale,
-        scaleY: (power / 1000) * circleScale,
-      }, 200);
-    circle.uncache();
-    circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+    circleTween();
   });
   filter = new createjs.ColorFilter(0, 1, 0, 1);
   circle.filters = [filter];
@@ -188,6 +206,51 @@ function init() {
 
   start();
   // createjs.Ticker.setPaused(true);
+
+  // Sound
+  bgmVolume = 0.25;
+  sfxVolume = 0.05;
+  createjs.Sound.registerSounds([{
+    id: 'bgm',
+    src: '/audio/bgm.mp3',
+  }, {
+    id: 'sfx01',
+    src: '/audio/sfx01.mp3',
+  }]);
+  createjs.Sound.addEventListener('fileload', () => {
+    bgm = createjs.Sound.play('bgm');
+    bgm.loop = -1;
+    bgm.volume = bgmVolume;
+  });
+
+  mute = false;
+  let muteButton = stage.addChild(new createjs.Text('\uf026', `${scale * 10}px FontAwesome`, '#ffffff'));
+  muteButton.textBaseline = 'top';
+  muteButton.textAlign = 'left';
+  muteButton.x = stage.canvas.width - (scale * 12);
+  muteButton.y = scale * 2;
+  muteButton.addEventListener('mousedown', () => {
+    if (!mute) {
+      bgmVolume = 0;
+      sfxVolume = 0;
+      muteButton.text = '\uf028';
+      muteButton.color = '#666';
+      mute = true;
+    } else {
+      bgmVolume = 0.25;
+      sfxVolume = 0.05;
+      muteButton.text = '\uf026';
+      muteButton.color = '#ffffff';
+      mute = false;
+    }
+    if (bgm) {
+      bgm.volume = bgmVolume;
+    }
+    if (sfx) {
+      sfx.volume = sfxVolume;
+    }
+  });
+
 }
 
 init();
