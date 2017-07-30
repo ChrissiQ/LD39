@@ -172,21 +172,26 @@ function init() {
   circle.uncache();
   circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
 
-  textPopulation = stage.addChild(new createjs.Text(`Population: ${population}`, '20px Arial', '#ffffff'));
-  textPopulation.textBaseline = 'alphabetic';
-  textPopulation.x = 10;
-  textPopulation.y = textPopulation.getMeasuredLineHeight() + 5;
+  textPopulation = stage.addChild(new createjs.Text(`Population: ${population}`, `${scale * 6}px Arial`, '#ffffff'));
+  textPopulation.textBaseline = 'center';
+  textPopulation.textAlign = 'center';
+  textPopulation.x = circle.x;
+  textPopulation.y = (circle.y) - (textPopulation.getMeasuredLineHeight() + 5);
+  textPopulation.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
 
-  textDemand = stage.addChild(new createjs.Text(`Demand: ${demand}`, '20px Arial', '#ffffff'));
-  textDemand.textBaseline = 'alphabetic';
-  textDemand.x = 10;
-  textDemand.y = (textDemand.getMeasuredLineHeight() + 5) * 2;
+  textDemand = stage.addChild(new createjs.Text(`Demand: ${demand}`, `${scale * 6}px Arial`, '#ffffff'));
+  textDemand.textBaseline = 'center';
+  textDemand.textAlign = 'center';
+  textDemand.x = circle.x;
+  textDemand.y = circle.y;
+  textDemand.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
 
-  textPower = stage.addChild(new createjs.Text(`Power: ${power}`, '20px Arial', '#ffffff'));
+  textPower = stage.addChild(new createjs.Text(`Power: ${power}`, `${scale * 6}px Arial`, '#ffffff'));
   textPower.textBaseline = 'alphabetic';
-  textPower.x = 10;
-  textPower.y = (textPower.getMeasuredLineHeight() + 5) * 3;
-
+  textPower.textAlign = 'center';
+  textPower.x = circle.x;
+  textPower.y = circle.y + (textPower.getMeasuredLineHeight() + 5);
+  textPower.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
 
   // Ticker
   createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
