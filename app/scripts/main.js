@@ -26,11 +26,14 @@ let addTextFPS;
 let setTextFPS;
 let circleTween;
 let circleSet;
+let circleClick;
 let bgm;
 let sfx;
 let mute;
 let bgmVolume;
 let sfxVolume;
+let createCircle1;
+let createCircle2;
 
 setTextFPS = function () {
   textFPS.text = `FPS: ${createjs.Ticker.getMeasuredFPS().toFixed(1)}`;
@@ -77,6 +80,15 @@ start = function () {
   circleSet();
 };
 
+circleClick = function () {
+  if (!createjs.Ticker.getPaused()) {
+    power += 100;
+    sfx = createjs.Sound.play('sfx01');
+    sfx.volume = sfxVolume;
+  }
+  circleTween();
+};
+
 circleTween = function () {
   createjs.Tween.removeAllTweens(circle);
   createjs.Tween.get(circle, { loop: false })
@@ -95,6 +107,43 @@ circleSet = function () {
     scaleX: (power / 1000) * circleScale,
     scaleY: (power / 1000) * circleScale,
   });
+};
+
+createCircle1 = function () {
+  circle = new createjs.Shape();
+  circle.graphics.beginFill('#ffffff').drawCircle(0, 0, scale);
+  circleSet();
+  circle.addEventListener('mousedown', circleClick);
+  filter = new createjs.ColorFilter(0, 1, 0, 1);
+  circle.filters = [filter];
+  stage.addChild(circle);
+  circle.uncache();
+  circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+
+  textPopulation = stage.addChild(new createjs.Text(`Population: ${population}`, `${scale * 6}px Arial`, '#ffffff'));
+  textPopulation.textBaseline = 'center';
+  textPopulation.textAlign = 'center';
+  textPopulation.x = circle.x;
+  textPopulation.y = (circle.y) - (textPopulation.getMeasuredLineHeight() + 5);
+  textPopulation.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
+
+  textDemand = stage.addChild(new createjs.Text(`Demand: ${demand}`, `${scale * 6}px Arial`, '#ffffff'));
+  textDemand.textBaseline = 'center';
+  textDemand.textAlign = 'center';
+  textDemand.x = circle.x;
+  textDemand.y = circle.y;
+  textDemand.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
+
+  textPower = stage.addChild(new createjs.Text(`Power: ${power}`, `${scale * 6}px Arial`, '#ffffff'));
+  textPower.textBaseline = 'alphabetic';
+  textPower.textAlign = 'center';
+  textPower.x = circle.x;
+  textPower.y = circle.y + (textPower.getMeasuredLineHeight() + 5);
+  textPower.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
+};
+
+createCircle2 = function () {
+
 };
 
 function resizeStage() {
@@ -155,43 +204,9 @@ function init() {
   stage.canvas.style.backgroundColor = '#333';
   resizeStage();
 
-  circle = new createjs.Shape();
-  circle.graphics.beginFill('#ffffff').drawCircle(0, 0, scale);
-  circleSet();
-  circle.addEventListener('mousedown', () => {
-    if (!createjs.Ticker.getPaused()) {
-      power += 100;
-      sfx = createjs.Sound.play('sfx01');
-      sfx.volume = sfxVolume;
-    }
-    circleTween();
-  });
-  filter = new createjs.ColorFilter(0, 1, 0, 1);
-  circle.filters = [filter];
-  stage.addChild(circle);
-  circle.uncache();
-  circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
-
-  textPopulation = stage.addChild(new createjs.Text(`Population: ${population}`, `${scale * 6}px Arial`, '#ffffff'));
-  textPopulation.textBaseline = 'center';
-  textPopulation.textAlign = 'center';
-  textPopulation.x = circle.x;
-  textPopulation.y = (circle.y) - (textPopulation.getMeasuredLineHeight() + 5);
-  textPopulation.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
-
-  textDemand = stage.addChild(new createjs.Text(`Demand: ${demand}`, `${scale * 6}px Arial`, '#ffffff'));
-  textDemand.textBaseline = 'center';
-  textDemand.textAlign = 'center';
-  textDemand.x = circle.x;
-  textDemand.y = circle.y;
-  textDemand.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
-
-  textPower = stage.addChild(new createjs.Text(`Power: ${power}`, `${scale * 6}px Arial`, '#ffffff'));
-  textPower.textBaseline = 'alphabetic';
-  textPower.textAlign = 'center';
-  textPower.x = circle.x;
-  textPower.y = circle.y + (textPower.getMeasuredLineHeight() + 5);
-  textPower.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
+  // Circle 1
+  createCircle1();
+  createCircle2();
 
   // Ticker
   createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
