@@ -4,21 +4,11 @@ const POPULATION_STARTING_VALUE = 200;
 const DANGER = 1000;
 const DEFAULT_BGM_VOL = 0.5;
 const DEFAULT_SFX_VOL = 0.1;
-let stage;
-let scale;
-let population;
-let populationTimer;
-let demand;
-let power = POWER_STARTING_VALUE;
-let textPopulation;
-let textDemand;
-let textPower;
 let textFPS;
 let textLose;
-let circleScale = 3;
-let unit;
-let unitText;
-let filter;
+let stage;
+let windowFactor;
+let sceneScale = 3;
 let checkLose;
 let start;
 let addTextFPS;
@@ -51,9 +41,15 @@ checkLose = function () {
   if (textLose) {
     delete textLose.text;
   }
-  if (demand > power) {
+  let lose = false;
+  circles.forEach(circle => {
+    if (circle.demand > circle.power) {
+      lose = true;
+    }
+  });
+  if (lose) {
     createjs.Ticker.setPaused(true);
-    textLose = stage.addChild(new createjs.Text('YOU LOSE', `${scale * 15}px Arial`, '#ffffff'));
+    textLose = stage.addChild(new createjs.Text('YOU LOSE', `${windowFactor * 15}px Arial`, '#ffffff'));
     textLose.textBaseline = 'middle';
     textLose.textAlign = 'center';
     textLose.x = stage.canvas.width / 2;
@@ -70,19 +66,14 @@ start = function () {
   if (stage) {
     stage.removeEventListener('stagemousedown', start);
   }
-  population = POPULATION_STARTING_VALUE;
-  populationTimer = 0;
-  demand = 1;
-  power = POWER_STARTING_VALUE;
-  circleScale = 3;
-  unit = 1;
-  unitText = 'W';
+  sceneScale = 3;
   circles.forEach(circle => circleSet(circle));
 };
 
 circleClick = function (event) {
+  let circle = event.target;
   if (!createjs.Ticker.getPaused()) {
-    power += 100;
+    circle.power += 100;
     sfx = createjs.Sound.play('sfx01');
     sfx.volume = sfxVolume;
   }
@@ -93,53 +84,73 @@ circleTween = function (circle) {
   createjs.Tween.removeAllTweens(circle);
   createjs.Tween.get(circle, { loop: false })
     .to({
-      scaleX: (power / 1000) * circleScale,
-      scaleY: (power / 1000) * circleScale,
+      scaleX: (circle.power / 1000) * sceneScale,
+      scaleY: (circle.power / 1000) * sceneScale,
     }, 200);
   circle.uncache();
-  circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+  circle.cache(
+    -windowFactor,
+    -windowFactor,
+    windowFactor * 2,
+    windowFactor * 2,
+    (circle.power / 1000) * sceneScale
+  );
 };
 
 circleSet = function (circle) {
+  // Stats
+  circle.power = POWER_STARTING_VALUE;
+  circle.population = POPULATION_STARTING_VALUE;
+  circle.demand = 1;
+  circle.populationTimer = 10;
+  circle.unit = 1;
+  circle.unitText = 'W';
+
   circle.set({
     x: stage.canvas.width / 2,
     y: stage.canvas.height / 2,
-    scaleX: (power / 1000) * circleScale,
-    scaleY: (power / 1000) * circleScale,
+    scaleX: (circle.power / 1000) * sceneScale,
+    scaleY: (circle.power / 1000) * sceneScale,
   });
 };
 
 createCircle1 = function () {
   let circle = new createjs.Shape();
-  circle.graphics.beginFill('#ffffff').drawCircle(0, 0, scale);
+  circle.graphics.beginFill('#ffffff').drawCircle(0, 0, windowFactor);
   circleSet(circle);
   circle.addEventListener('mousedown', circleClick);
-  filter = new createjs.ColorFilter(0, 1, 0, 1);
-  circle.filters = [filter];
+  circle.filters = [new createjs.ColorFilter(0, 1, 0, 1)];
   stage.addChild(circle);
   circle.uncache();
-  circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+  circle.cache(
+    -windowFactor,
+    -windowFactor,
+    windowFactor * 2,
+    windowFactor * 2,
+    (circle.power / 1000) * sceneScale
+  );
 
-  textPopulation = stage.addChild(new createjs.Text(`Population: ${population}`, `${scale * 6}px Arial`, '#ffffff'));
-  textPopulation.textBaseline = 'center';
-  textPopulation.textAlign = 'center';
-  textPopulation.x = circle.x;
-  textPopulation.y = (circle.y) - (textPopulation.getMeasuredLineHeight() + 5);
-  textPopulation.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
+  circle.textPopulation = stage.addChild(new createjs.Text(`Population: ${circle.population}`, `${windowFactor * 6}px Arial`, '#ffffff'));
+  circle.textPopulation.textBaseline = 'center';
+  circle.textPopulation.textAlign = 'center';
+  circle.textPopulation.x = circle.x;
+  circle.textPopulation.y = (circle.y) - (circle.textPopulation.getMeasuredLineHeight() + 5);
+  circle.textPopulation.shadow = new createjs.Shadow('#000000', 0, 0, windowFactor * 0.5);
 
-  textDemand = stage.addChild(new createjs.Text(`Demand: ${demand}`, `${scale * 6}px Arial`, '#ffffff'));
-  textDemand.textBaseline = 'center';
-  textDemand.textAlign = 'center';
-  textDemand.x = circle.x;
-  textDemand.y = circle.y;
-  textDemand.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
+  circle.textDemand = stage.addChild(new createjs.Text(`Demand: ${circle.demand}`, `${windowFactor * 6}px Arial`, '#ffffff'));
+  circle.textDemand.textBaseline = 'center';
+  circle.textDemand.textAlign = 'center';
+  circle.textDemand.x = circle.x;
+  circle.textDemand.y = circle.y;
+  circle.textDemand.shadow = new createjs.Shadow('#000000', 0, 0, windowFactor * 0.5);
 
-  textPower = stage.addChild(new createjs.Text(`Power: ${power}`, `${scale * 6}px Arial`, '#ffffff'));
-  textPower.textBaseline = 'alphabetic';
-  textPower.textAlign = 'center';
-  textPower.x = circle.x;
-  textPower.y = circle.y + (textPower.getMeasuredLineHeight() + 5);
-  textPower.shadow = new createjs.Shadow('#000000', 0, 0, scale * 0.5);
+  circle.textPower = stage.addChild(new createjs.Text(`Power: ${circle.power}`, `${windowFactor * 6}px Arial`, '#ffffff'));
+  circle.textPower.textBaseline = 'alphabetic';
+  circle.textPower.textAlign = 'center';
+  circle.textPower.x = circle.x;
+  circle.textPower.y = circle.y + (circle.textPower.getMeasuredLineHeight() + 5);
+  circle.textPower.shadow = new createjs.Shadow('#000000', 0, 0, windowFactor * 0.5);
+
   return circle;
 };
 
@@ -151,7 +162,7 @@ function resizeStage() {
   } else {
     height = width * (16 / 9);
   }
-  scale = width / 100;
+  windowFactor = width / 100;
   stage.canvas.setAttribute('width', width);
   stage.canvas.setAttribute('height', height);
   circles.forEach(circle => {
@@ -172,30 +183,35 @@ function resizeStage() {
 function tick() {
   if (!createjs.Ticker.getPaused()) {
     circles.forEach(circle => {
-      populationTimer += 1;
-      if (populationTimer > POPULATION_SPEED) {
-        population += Math.pow(population, 1.02) / 1000;
-        populationTimer = 0;
-        demand = (Math.pow(population / 100, 3) * 1000);
-        let r = (1 - ((power - demand) / DANGER)) * 2;
-        let g = ((power - demand) / DANGER) * 2;
+      circle.populationTimer += 1;
+      if (circle.populationTimer > POPULATION_SPEED) {
+        circle.population += Math.pow(circle.population, 1.02) / 1000;
+        circle.populationTimer = 0;
+        circle.demand = (Math.pow(circle.population / 100, 3) * 1000);
+        let r = (1 - ((circle.power - circle.demand) / DANGER)) * 2;
+        let g = ((circle.power - circle.demand) / DANGER) * 2;
         let b = 0;
         let a = 1;
-        filter = new createjs.ColorFilter(r, g, b, a);
-        circle.filters = [filter];
+        circle.filters = [new createjs.ColorFilter(r, g, b, a)];
         circle.uncache();
-        circle.cache(-scale, -scale, scale * 2, scale * 2, (power / 1000) * circleScale);
+        circle.cache(
+          -windowFactor,
+          -windowFactor,
+          windowFactor * 2,
+          windowFactor * 2,
+          (circle.power / 1000) * sceneScale
+        );
 
         checkLose();
       }
+      if (circle.unit === 1) {
+        circle.unitText = 'W';
+      }
+      circle.textPopulation.text = `Population: ${parseInt(circle.population, 10)}`;
+      circle.textDemand.text = `Demand: ${circle.demand.toFixed(1)} ${circle.unitText}`;
+      circle.textPower.text = `Power: ${circle.power} ${circle.unitText}`;
     });
   }
-  if (unit === 1) {
-    unitText = 'W';
-  }
-  textPopulation.text = `Population: ${parseInt(population, 10)}`;
-  textDemand.text = `Demand: ${demand.toFixed(1)} ${unitText}`;
-  textPower.text = `Power: ${power} ${unitText}`;
   setTextFPS();
 }
 
@@ -236,11 +252,11 @@ function init() {
   });
 
   mute = false;
-  let muteButton = stage.addChild(new createjs.Text('\uf026', `${scale * 10}px FontAwesome`, '#ffffff'));
+  let muteButton = stage.addChild(new createjs.Text('\uf026', `${windowFactor * 10}px FontAwesome`, '#ffffff'));
   muteButton.textBaseline = 'top';
   muteButton.textAlign = 'left';
-  muteButton.x = stage.canvas.width - (scale * 12);
-  muteButton.y = scale * 2;
+  muteButton.x = stage.canvas.width - (windowFactor * 12);
+  muteButton.y = windowFactor * 2;
   muteButton.addEventListener('mousedown', () => {
     if (!mute) {
       bgmVolume = 0;
