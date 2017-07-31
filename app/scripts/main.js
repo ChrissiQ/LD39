@@ -240,10 +240,10 @@ function init() {
   sfxVolume = DEFAULT_SFX_VOL;
   createjs.Sound.registerSounds([{
     id: 'bgm',
-    src: '/audio/bgm.mp3',
+    src: 'audio/bgm.mp3',
   }, {
     id: 'sfx01',
-    src: '/audio/sfx01.mp3',
+    src: 'audio/sfx01.mp3',
   }]);
   createjs.Sound.addEventListener('fileload', () => {
     bgm = createjs.Sound.play('bgm');
